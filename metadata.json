@@ -1,0 +1,6 @@
+{
+  "name": "AD Print 3D",
+  "description": "Loja online e painel de gestão de produtos sensoriais 3D (fidgets, kits e boxes personalizados)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
