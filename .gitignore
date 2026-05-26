@@ -9,3 +9,5 @@ coverage/
 db-orders.json
 db-settings.json
 *.zip
+package-lock.json
+
