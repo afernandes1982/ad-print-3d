@@ -19,6 +19,7 @@ export default function AIGeneratorStudio({ onAddProduct }: AIGeneratorStudioPro
   const [savedAds, setSavedAds] = useState<AIAdvertisement[]>([]);
 
   useEffect(() => {
+    // 1. Fallback to local storage immediately
     const saved = localStorage.getItem('ai_saved_ads');
     if (saved) {
       try {
@@ -27,20 +28,54 @@ export default function AIGeneratorStudio({ onAddProduct }: AIGeneratorStudioPro
         console.error(e);
       }
     }
+
+    // 2. Fetch and synchronize from database
+    fetch('/api/admin/ai-ads')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setSavedAds(data);
+          localStorage.setItem('ai_saved_ads', JSON.stringify(data));
+        }
+      })
+      .catch(err => console.warn('Não foi possível carregar anúncios do banco. Usando local.', err));
   }, []);
 
   const handleSaveAd = (ad: AIAdvertisement) => {
-    const updatedAds = [ad, ...savedAds];
+    // Prevent duplicate IDs in state list
+    const filtered = savedAds.filter(a => a.id !== ad.id);
+    const updatedAds = [ad, ...filtered];
     setSavedAds(updatedAds);
     localStorage.setItem('ai_saved_ads', JSON.stringify(updatedAds));
-    showToast('Anúncio salvo com sucesso!');
+    
+    // Save to PostgreSQL database
+    fetch('/api/admin/ai-ads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ad)
+    })
+      .then(res => res.json())
+      .then(() => showToast('Anúncio salvo no banco com sucesso!'))
+      .catch(err => {
+        console.error('Erro ao salvar anúncio no servidor:', err);
+        showToast('Anúncio salvo localmente.', 'info');
+      });
   };
 
   const handleDeleteSavedAd = (id: string) => {
     const updatedAds = savedAds.filter(a => a.id !== id);
     setSavedAds(updatedAds);
     localStorage.setItem('ai_saved_ads', JSON.stringify(updatedAds));
-    showToast('Anúncio excluído!', 'info');
+
+    // Delete from PostgreSQL database
+    fetch(`/api/admin/ai-ads/${id}`, {
+      method: 'DELETE'
+    })
+      .then(() => showToast('Anúncio excluído do banco!', 'info'))
+      .catch(err => {
+        console.error('Erro ao excluir anúncio do servidor:', err);
+        showToast('Anúncio excluído localmente.', 'info');
+      });
   };
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -71,8 +106,9 @@ export default function AIGeneratorStudio({ onAddProduct }: AIGeneratorStudioPro
     setIsGenerating(true);
     // TODO: Connect to AI / Backend logic here
     setTimeout(() => {
+      const generatedId = 'ai-ad-' + Date.now();
       setGeneratedAd({
-        id: '1',
+        id: generatedId,
         baseProductName: productName || 'Ovo de Dragão',
         baseImageUrl: baseImage || '',
         generatedImages: [

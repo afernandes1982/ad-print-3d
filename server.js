@@ -175,6 +175,20 @@ async function initDatabase() {
       )
     `);
 
+    // Migração: Adicionar coluna de imagens geradas por IA se não existir
+    await client.query(`
+      ALTER TABLE products ADD COLUMN IF NOT EXISTS ai_images JSONB;
+    `);
+
+    // Criar tabela para armazenar anúncios salvos gerados por IA
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ai_ads (
+        id TEXT PRIMARY KEY,
+        content JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS orders (
         id TEXT PRIMARY KEY,
@@ -295,6 +309,14 @@ async function dbGetProducts() {
 }
 
 function rowToProduct(row) {
+  let aiImages = [];
+  if (row.ai_images) {
+    try {
+      aiImages = typeof row.ai_images === 'string' ? JSON.parse(row.ai_images) : row.ai_images;
+    } catch (e) {
+      console.error('Erro ao fazer parse de ai_images:', e);
+    }
+  }
   return {
     id: row.id,
     name: row.name,
@@ -307,7 +329,8 @@ function rowToProduct(row) {
     material: row.material,
     isKit: row.is_kit,
     isPopular: row.is_popular,
-    baseColor: row.base_color
+    baseColor: row.base_color,
+    aiImages: Array.isArray(aiImages) ? aiImages : []
   };
 }
 
@@ -420,10 +443,10 @@ app.post('/api/admin/products', async (req, res) => {
   if (useDatabase && pool) {
     try {
       await pool.query(
-        `INSERT INTO products (id, name, price, description, category, image_url, stock, size, material, is_kit, is_popular, base_color)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-         ON CONFLICT (id) DO UPDATE SET name=$2, price=$3, description=$4, category=$5, image_url=$6, stock=$7, size=$8, material=$9, is_kit=$10, is_popular=$11, base_color=$12`,
-        [p.id, p.name, p.price, p.description, p.category, p.imageUrl, p.stock, p.size, p.material, p.isKit || false, p.isPopular || false, p.baseColor || null]
+        `INSERT INTO products (id, name, price, description, category, image_url, stock, size, material, is_kit, is_popular, base_color, ai_images)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+         ON CONFLICT (id) DO UPDATE SET name=$2, price=$3, description=$4, category=$5, image_url=$6, stock=$7, size=$8, material=$9, is_kit=$10, is_popular=$11, base_color=$12, ai_images=$13`,
+        [p.id, p.name, p.price, p.description, p.category, p.imageUrl, p.stock, p.size, p.material, p.isKit || false, p.isPopular || false, p.baseColor || null, JSON.stringify(p.aiImages || [])]
       );
       const result = await pool.query('SELECT * FROM products WHERE id=$1', [p.id]);
       res.json({ success: true, product: rowToProduct(result.rows[0]) });
@@ -443,8 +466,8 @@ app.put('/api/admin/products/:id', async (req, res) => {
   if (useDatabase && pool) {
     try {
       await pool.query(
-        `UPDATE products SET name=$1, price=$2, description=$3, category=$4, image_url=$5, stock=$6, size=$7, material=$8, is_kit=$9, is_popular=$10, base_color=$11 WHERE id=$12`,
-        [p.name, p.price, p.description, p.category, p.imageUrl, p.stock, p.size, p.material, p.isKit || false, p.isPopular || false, p.baseColor || null, id]
+        `UPDATE products SET name=$1, price=$2, description=$3, category=$4, image_url=$5, stock=$6, size=$7, material=$8, is_kit=$9, is_popular=$10, base_color=$11, ai_images=$12 WHERE id=$13`,
+        [p.name, p.price, p.description, p.category, p.imageUrl, p.stock, p.size, p.material, p.isKit || false, p.isPopular || false, p.baseColor || null, JSON.stringify(p.aiImages || []), id]
       );
       const result = await pool.query('SELECT * FROM products WHERE id=$1', [id]);
       res.json({ success: true, product: rowToProduct(result.rows[0]) });
@@ -465,6 +488,60 @@ app.delete('/api/admin/products/:id', async (req, res) => {
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ error: 'Erro ao deletar produto' });
+    }
+  } else {
+    res.json({ success: true });
+  }
+});
+
+// AI Ads endpoints para persistência em PostgreSQL
+app.get('/api/admin/ai-ads', async (req, res) => {
+  if (useDatabase && pool) {
+    try {
+      const result = await pool.query('SELECT * FROM ai_ads ORDER BY created_at DESC');
+      res.json(result.rows.map(row => ({
+        ...row.content,
+        id: row.id,
+        createdAt: row.created_at
+      })));
+    } catch (err) {
+      console.error('Erro ao buscar anúncios salvos no banco:', err);
+      res.status(500).json({ error: 'Erro ao buscar anúncios salvos' });
+    }
+  } else {
+    res.json([]);
+  }
+});
+
+app.post('/api/admin/ai-ads', async (req, res) => {
+  const ad = req.body;
+  if (!ad.id) ad.id = Date.now().toString();
+  if (useDatabase && pool) {
+    try {
+      await pool.query(
+        `INSERT INTO ai_ads (id, content) VALUES ($1, $2)
+         ON CONFLICT (id) DO UPDATE SET content = $2`,
+        [ad.id, JSON.stringify(ad)]
+      );
+      res.json({ success: true, ad });
+    } catch (err) {
+      console.error('Erro ao salvar anúncio no banco:', err);
+      res.status(500).json({ error: 'Erro ao salvar anúncio' });
+    }
+  } else {
+    res.json({ success: true, ad });
+  }
+});
+
+app.delete('/api/admin/ai-ads/:id', async (req, res) => {
+  const { id } = req.params;
+  if (useDatabase && pool) {
+    try {
+      await pool.query('DELETE FROM ai_ads WHERE id = $1', [id]);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Erro ao excluir anúncio no banco:', err);
+      res.status(500).json({ error: 'Erro ao excluir anúncio' });
     }
   } else {
     res.json({ success: true });
