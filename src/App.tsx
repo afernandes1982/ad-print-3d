@@ -257,7 +257,8 @@ export default function App() {
 
     // Set initial active product
     if (loadedProducts.length > 0) {
-      const defaultActive = loadedProducts.find(p => p.id === 'estrela-espiral-movel') || loadedProducts[0];
+      const lastActiveId = localStorage.getItem('ad_print_3d_active_product_id');
+      const defaultActive = (lastActiveId && loadedProducts.find(p => p.id === lastActiveId)) || loadedProducts.find(p => p.id === 'estrela-espiral-movel') || loadedProducts[0];
       setActiveProduct(defaultActive);
       if (defaultActive.baseColor) {
         const matchingColor = FILAMENT_COLORS.find(c => c.name === defaultActive.baseColor);
@@ -290,6 +291,30 @@ export default function App() {
             }
           });
 
+          // Sync any custom products created locally that are missing on the PostgreSQL server database
+          if (savedProducts) {
+            try {
+              const localProds: Product[] = JSON.parse(savedProducts);
+              localProds.forEach(localProd => {
+                if (deletedIds.includes(localProd.id)) return;
+                const exists = updatedList.some(p => p.id === localProd.id);
+                if (!exists) {
+                  updatedList.push(localProd);
+                  changed = true;
+
+                  // Save to PostgreSQL backend database
+                  fetch('/api/admin/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(localProd)
+                  }).catch(err => console.error('Erro ao sincronizar produto local no servidor:', err));
+                }
+              });
+            } catch (e) {
+              console.error('Erro ao fazer parse dos produtos locais para sincronização:', e);
+            }
+          }
+
           if (changed) {
             localStorage.setItem('ad_print_3d_products', JSON.stringify(updatedList));
           }
@@ -297,8 +322,12 @@ export default function App() {
           
           if (updatedList.length > 0) {
             setActiveProduct(prev => {
+              const lastActiveId = localStorage.getItem('ad_print_3d_active_product_id');
               if (prev && updatedList.some(p => p.id === prev.id)) {
                 return updatedList.find(p => p.id === prev.id) || prev;
+              }
+              if (lastActiveId && updatedList.some(p => p.id === lastActiveId)) {
+                return updatedList.find(p => p.id === lastActiveId) || updatedList[0];
               }
               return updatedList.find(p => p.id === 'estrela-espiral-movel') || updatedList[0];
             });
@@ -361,6 +390,7 @@ export default function App() {
   // Update active product's default color when selection changes
   useEffect(() => {
     if (activeProduct) {
+      localStorage.setItem('ad_print_3d_active_product_id', activeProduct.id);
       const baseColorName = activeProduct.baseColor || 'Roxo Galáxia';
       const matchingColor = FILAMENT_COLORS.find(c => c.name === baseColorName) || FILAMENT_COLORS[0];
       setSelectedColor(matchingColor);
