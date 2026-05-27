@@ -282,7 +282,7 @@ export default function AdminPanel({
   };
 
   function newProductFormFormCategory(cat: string): Product['category'] {
-    if (cat === 'Articulados' || cat === 'Sensoriais' || cat === 'Kits' || cat === 'Fidgets') {
+    if (cat === 'Articulados' || cat === 'Sensoriais' || cat === 'Kits' || cat === 'Fidgets' || cat === 'Personalizados') {
       return cat;
     }
     return 'Fidgets';
@@ -1014,6 +1014,7 @@ export default function AdminPanel({
                     <option value="Articulados">Articulados Complexos</option>
                     <option value="Sensoriais">Suporte Sensorial TEA/TDAH</option>
                     <option value="Kits">Kit / Box Pronto</option>
+                    <option value="Personalizados">Personalizados (Letreiros/Portas)</option>
                   </select>
                 </div>
               </div>

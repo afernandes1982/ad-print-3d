@@ -606,6 +606,10 @@ export default function App() {
         return { tag: 'SILENCIOSO', color: 'bg-[#4ade80]', text: 'Este brinquedo emite um som classificado como Suave. É ideal para ambientes escolares e corporativos pois possui eixos concêntricos lubrificados silenciosos.' };
       case 'Fidgets':
         return { tag: 'ESTALADO', color: 'bg-[#ec4899]', text: 'Estalos secos e de alta frequência. Estimula o relaxamento rápido através de feedback de áudio tátil de alta fidelidade.' };
+      case 'Kits':
+        return { tag: 'PROMOÇÃO 📦', color: 'bg-[#60a5fa]', text: 'Kit promocional contendo múltiplos itens selecionados especialmente para regulação e foco sensorial completo.' };
+      case 'Personalizados':
+        return { tag: 'EXCLUSIVO 🏷️', color: 'bg-[#c084fc]', text: 'Item personalizado impresso em 3D conforme suas especificações de cor, texto e tamanho. Feito sob encomenda.' };
       default:
         return { tag: 'SUAVE', color: 'bg-[#fbbf24]', text: 'Livre de atrito excessivo. Design ergonômico ideal para autorregulação tátil em consultórios e terapias ocupacionais.' };
     }
@@ -749,6 +753,7 @@ export default function App() {
                       { label: 'COLEÇÃO ARTICULADA 🐉', value: 'Articulados' },
                       { label: 'GIRO & CINÉTICOS 🌀', value: 'Sensoriais' },
                       { label: 'TEXTURAS & FIDGETS 🧩', value: 'Fidgets' },
+                      { label: 'KITS PROMOCIONAIS 📦', value: 'Kits' },
                       { label: 'DECORAÇÃO & CUSTOMIZADOS 🏷️', value: 'Personalizados' }
                     ] as const).map((filter) => (
                       <button

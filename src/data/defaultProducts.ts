@@ -7,8 +7,22 @@ import { Product } from '../types';
 import letreiroImg from '../letreiro_crer.jpg';
 import portaLapisImg from '../porta_lapis.jpg';
 import dragaoImg from '../dragao-articulado.png';
+import kit5BrinquedosImg from '../kit-5-brinquedos.jpg';
 
 export const INITIAL_PRODUCTS: Product[] = [
+  {
+    id: 'kit-5-brinquedos',
+    name: 'Kit Sensorial Especial (5 Brinquedos)',
+    price: 160.00,
+    description: 'Super Kit Sensorial promocional! Inclui 1 Cubo Infinito (Ouro Silk), 1 Dragão Articulado (Ouro Silk), 1 Fidget de Engrenagem (Azul/Branco), 1 Estrela Sensorial Grande (Azul) e 1 Fidget Cubo Flexível (Azul). De R$ 240,00 por apenas R$ 160,00!',
+    category: 'Kits',
+    imageUrl: kit5BrinquedosImg,
+    stock: 15,
+    size: 'Box Premium',
+    material: 'Ligas Mistas PLA',
+    isKit: true,
+    isPopular: true
+  },
   {
     id: 'dragao-articulado',
     name: 'Dragão Articulado',
