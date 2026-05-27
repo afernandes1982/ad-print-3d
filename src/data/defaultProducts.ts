@@ -6,8 +6,22 @@
 import { Product } from '../types';
 import letreiroImg from '../letreiro_crer.jpg';
 import portaLapisImg from '../porta_lapis.jpg';
+import dragaoImg from '../dragao-articulado.png';
 
 export const INITIAL_PRODUCTS: Product[] = [
+  {
+    id: 'dragao-articulado',
+    name: 'Dragão Articulado',
+    price: 45.00,
+    description: 'Um dragão articulado incrível impresso em 3D. Perfeito para relaxar, como fidget toy ou como item decorativo super detalhado.',
+    category: 'Articulados',
+    imageUrl: dragaoImg,
+    stock: 20,
+    size: '40cm',
+    material: 'PLA',
+    isKit: false,
+    isPopular: true
+  },
   {
     id: 'estrela-articulada',
     name: 'Estrela Flexível Articulado Fidget Toy Impressão 3D Premium',
