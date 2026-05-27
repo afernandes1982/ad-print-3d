@@ -163,15 +163,15 @@ export default function App() {
     const savedCart = localStorage.getItem('ad_print_3d_cart');
     const savedSettings = localStorage.getItem('ad_print_3d_settings');
     const savedCoupons = localStorage.getItem('ad_print_3d_coupons');
-
     let loadedProducts: Product[] = [];
+    const deletedIds: string[] = JSON.parse(localStorage.getItem('ad_print_3d_deleted_product_ids') || '[]');
     if (savedProducts) {
       let parsed = JSON.parse(savedProducts);
       let changed = false;
       
       // Ensure Pulse Pad is present in the list
       const hasPulsePad = parsed.some((p: any) => p.id === 'pulse-pad' || p.imageUrl === 'pulse-pad');
-      if (!hasPulsePad) {
+      if (!hasPulsePad && !deletedIds.includes('pulse-pad')) {
         const pulsePadProduct: Product = {
           id: 'pulse-pad',
           name: 'Pulse Pad Click',
@@ -192,12 +192,12 @@ export default function App() {
 
       // Ensure Cubo Infinito is present
       const nexoIndex = parsed.findIndex((p: any) => p.id === 'nexo-cube' || p.imageUrl === 'nexo-cube');
-      if (nexoIndex === -1) {
+      if (nexoIndex === -1 && !deletedIds.includes('nexo-cube')) {
         const nexoCubeProduct: Product = {
           id: 'nexo-cube',
           name: 'Cubo Infinito',
           price: 49.90,
-          description: 'Pequenos blocos conectados com acabamento Dual-Color Metalizado que se dobram continuamente, mantendo as mãos ocupadas e a mente focada. Rotação ultra-suave e excelente feedback proprioceptivo.',
+          description: 'Pequenos blocos conectados com acabamento Dual-Color Metalizado que se dobram continuamente, mantendo as mãos ocupadas e a mente focada. Rotação ultra-suave and excelente feedback proprioceptivo.',
           category: 'Fidgets',
           imageUrl: 'nexo-cube',
           stock: 20,
@@ -213,7 +213,7 @@ export default function App() {
 
       // Ensure Estrela Espiral Móvel is present
       const espiralIndex = parsed.findIndex((p: any) => p.id === 'estrela-espiral-movel');
-      if (espiralIndex === -1) {
+      if (espiralIndex === -1 && !deletedIds.includes('estrela-espiral-movel')) {
         const espiralProduct: Product = {
           id: 'estrela-espiral-movel',
           name: 'Estrela Espiral Móvel',
@@ -233,6 +233,7 @@ export default function App() {
       }
 
       INITIAL_PRODUCTS.forEach((defaultProd) => {
+        if (deletedIds.includes(defaultProd.id)) return;
         const existingIdx = parsed.findIndex((p: any) => p.id === defaultProd.id);
         if (existingIdx === -1) {
           parsed.push(defaultProd);
@@ -249,9 +250,10 @@ export default function App() {
       setProducts(parsed);
       loadedProducts = parsed;
     } else {
-      setProducts(INITIAL_PRODUCTS);
-      localStorage.setItem('ad_print_3d_products', JSON.stringify(INITIAL_PRODUCTS));
-      loadedProducts = INITIAL_PRODUCTS;
+      const filteredDefaults = INITIAL_PRODUCTS.filter(p => !deletedIds.includes(p.id));
+      setProducts(filteredDefaults);
+      localStorage.setItem('ad_print_3d_products', JSON.stringify(filteredDefaults));
+      loadedProducts = filteredDefaults;
     }
 
     // Set initial active product
@@ -493,6 +495,17 @@ export default function App() {
   const handleAdminDeleteProduct = (id: string) => {
     const updated = products.filter(p => p.id !== id);
     updateProductsInDb(updated);
+
+    // Track deleted product ID in localStorage so it doesn't get restored on page reload
+    try {
+      const deletedIds = JSON.parse(localStorage.getItem('ad_print_3d_deleted_product_ids') || '[]');
+      if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+        localStorage.setItem('ad_print_3d_deleted_product_ids', JSON.stringify(deletedIds));
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleAdminUpdateOrderStatus = (orderId: string, status: Order['orderStatus']) => {
