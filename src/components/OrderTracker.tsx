@@ -141,8 +141,20 @@ export default function OrderTracker({ orders }: OrderTrackerProps) {
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">PEDIDO ATIVO</span>
                   <h3 className="font-mono text-black text-base font-black">{foundOrder.id}</h3>
                   <p className="text-slate-650 text-xs mt-1 font-semibold">Destinatário: <strong className="text-black">{foundOrder.customerName}</strong></p>
+                  
+                  {/* Order items display list */}
+                  <div className="mt-3.5 space-y-1.5 bg-[#faf6e8]/40 border-2 border-black/10 rounded-2xl p-3.5 max-w-md">
+                    <span className="text-[8.5px] font-black text-slate-500 uppercase tracking-wider block mb-1">Itens Adquiridos:</span>
+                    {foundOrder.items.map((item, idx) => (
+                      <div key={idx} className="text-[11px] text-slate-700 font-semibold flex justify-between gap-4">
+                        <span>{item.quantity}x {item.name}</span>
+                        <span className="font-mono text-slate-900 font-bold shrink-0">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+
                   {foundOrder.deliveryMethod === 'hand' && (
-                    <span className="inline-flex items-center gap-1 bg-[#eefcf3] text-emerald-800 text-[9.5px] px-2.5 py-0.5 rounded-full border border-black font-black mt-2 shadow-[1px_1px_0px_#000] uppercase">
+                    <span className="inline-flex items-center gap-1 bg-[#eefcf3] text-emerald-800 text-[9.5px] px-2.5 py-0.5 rounded-full border border-black font-black mt-3 shadow-[1px_1px_0px_#000] uppercase">
                       🤝 Entrega em Mãos (SP Capital)
                     </span>
                   )}
