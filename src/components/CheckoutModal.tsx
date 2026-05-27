@@ -964,7 +964,7 @@ export default function CheckoutModal({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-bold uppercase text-[10px]">Valor Pago:</span>
-                <span className="font-black">R$ {finalTotalAmount.toFixed(2)}</span>
+                <span className="font-black">R$ {(generatedOrder?.total || finalTotalAmount).toFixed(2)}</span>
               </div>
             </div>
 
