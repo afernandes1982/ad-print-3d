@@ -10,6 +10,7 @@ import Navbar from './components/Navbar';
 import ProductCard, { PulsePadInteractive, NexoCubeInteractive, EstrelaEspiralInteractive } from './components/ProductCard';
 import BoxBuilder from './components/BoxBuilder';
 import AdminPanel from './components/AdminPanel';
+import AdminLogin from './components/AdminLogin';
 import OrderTracker from './components/OrderTracker';
 import CheckoutModal from './components/CheckoutModal';
 import { useProductImageCleaner } from './hooks/useProductImageCleaner';
@@ -106,6 +107,19 @@ export default function App() {
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [settings, setSettings] = useState<ECommerceSettings>(DEFAULT_SETTINGS);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+
+  // Autenticação do Admin
+  const [adminToken, setAdminToken] = useState<string | null>(() => localStorage.getItem('ad_print_3d_admin_token'));
+
+  const handleAdminLogin = (token: string) => {
+    setAdminToken(token);
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('ad_print_3d_admin_token');
+    setAdminToken(null);
+    setTab('shoppe');
+  };
 
   // UI state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -1256,22 +1270,27 @@ export default function App() {
               <OrderTracker orders={orders} />
             )}
 
-            {/* TAB 5: ADMIN DASHBOARD CONTROL PANEL */}
+            {/* TAB 5: ADMIN DASHBOARD CONTROL PANEL — PROTEGIDO POR SENHA */}
             {currentTab === 'admin' && (
-              <AdminPanel 
-                products={products}
-                orders={orders}
-                onAddProduct={handleAdminAddProduct}
-                onUpdateProduct={handleAdminUpdateProduct}
-                onUpdateProductStock={handleAdminUpdateStock}
-                onDeleteProduct={handleAdminDeleteProduct}
-                onUpdateOrderStatus={handleAdminUpdateOrderStatus}
-                settings={settings}
-                onUpdateSettings={handleUpdateSettings}
-                coupons={coupons}
-                onAddCoupon={handleAdminAddCoupon}
-                onDeleteCoupon={handleAdminDeleteCoupon}
-              />
+              adminToken ? (
+                <AdminPanel 
+                  products={products}
+                  orders={orders}
+                  onAddProduct={handleAdminAddProduct}
+                  onUpdateProduct={handleAdminUpdateProduct}
+                  onUpdateProductStock={handleAdminUpdateStock}
+                  onDeleteProduct={handleAdminDeleteProduct}
+                  onUpdateOrderStatus={handleAdminUpdateOrderStatus}
+                  settings={settings}
+                  onUpdateSettings={handleUpdateSettings}
+                  coupons={coupons}
+                  onAddCoupon={handleAdminAddCoupon}
+                  onDeleteCoupon={handleAdminDeleteCoupon}
+                  onLogout={handleAdminLogout}
+                />
+              ) : (
+                <AdminLogin onLogin={handleAdminLogin} />
+              )
             )}
           </>
         )}

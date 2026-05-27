@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { ShoppingBag, LayoutDashboard, Sparkles, HelpCircle, ShoppingCart, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShoppingBag, LayoutDashboard, ShoppingCart } from 'lucide-react';
 import logo3D from '../logo_3d_printer.png';
 
 interface NavbarProps {
@@ -16,15 +16,34 @@ interface NavbarProps {
 }
 
 export default function Navbar({ currentTab, setTab, cartCount, onOpenCart, isAdmin }: NavbarProps) {
+  // Cliques secretos no logo para abrir o painel admin
+  const [logoClickCount, setLogoClickCount] = useState(0);
+  const [lastClickTime, setLastClickTime] = useState(0);
+
+  const handleLogoClick = () => {
+    const now = Date.now();
+    const timeSinceLast = now - lastClickTime;
+    setLastClickTime(now);
+    // Se clicar mais de 5 vezes em menos de 3 segundos, vai para o admin
+    const newCount = timeSinceLast < 2000 ? logoClickCount + 1 : 1;
+    setLogoClickCount(newCount);
+    if (newCount >= 5) {
+      setLogoClickCount(0);
+      setTab('admin');
+    } else {
+      setTab('shoppe');
+    }
+  };
   return (
     <header className="sticky top-0 z-40 w-full border-b-[3px] border-black bg-white py-3">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 sm:px-6">
         
         {/* Logo and Brand - AD PRINT 3D style */}
         <button 
-          onClick={() => setTab('shoppe')} 
+          onClick={handleLogoClick}
           className="flex items-center gap-2.5 group focus:outline-none"
           id="navbar-logo-btn"
+          title="AD PRINT 3D"
         >
           {/* Circular Red Printer Badge */}
           <div className="w-12 h-12 bg-white border-[2.5px] border-[#3b82f6] rounded-full flex items-center justify-center shadow-[2px_2px_0px_#000] overflow-hidden transform transition-transform group-hover:scale-105 active:translate-y-0.5 shrink-0">
@@ -90,18 +109,17 @@ export default function Navbar({ currentTab, setTab, cartCount, onOpenCart, isAd
             Rastrear
           </button>
 
-          <button
-            id="nav-tab-admin"
-            onClick={() => setTab('admin')}
-            className={`px-4 py-2 border-[2.5px] border-black rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-[3px_3px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000] flex items-center gap-1.5 ${
-              currentTab === 'admin'
-                ? 'bg-[#4ade80] text-black' 
-                : 'bg-white text-black hover:bg-slate-50'
-            }`}
-          >
-            <LayoutDashboard className="w-3.5 h-3.5" />
-            Admin
-          </button>
+          {/* Botão Admin OCULTO - só aparece quando está na aba admin */}
+          {currentTab === 'admin' && (
+            <button
+              id="nav-tab-admin"
+              onClick={() => setTab('admin')}
+              className="px-4 py-2 border-[2.5px] border-black rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-[3px_3px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000] flex items-center gap-1.5 bg-[#4ade80] text-black"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              Admin
+            </button>
+          )}
         </nav>
 
         {/* Right Info and Sacola - Brutalist details */}
@@ -159,14 +177,17 @@ export default function Navbar({ currentTab, setTab, cartCount, onOpenCart, isAd
           <span className="text-base mb-0.5">📦</span>
           Rastrear
         </button>
-        <button
-          id="mob-nav-admin"
-          onClick={() => setTab('admin')}
-          className={`flex flex-col items-center text-[9px] uppercase tracking-wider font-black ${currentTab === 'admin' ? 'text-black' : 'text-slate-600'}`}
-        >
-          <LayoutDashboard className="w-4 h-4 mb-0.5" />
-          Admin
-        </button>
+        {/* Botão admin mobile oculto - só aparece quando já está no admin */}
+        {currentTab === 'admin' && (
+          <button
+            id="mob-nav-admin"
+            onClick={() => setTab('admin')}
+            className="flex flex-col items-center text-[9px] uppercase tracking-wider font-black text-black"
+          >
+            <LayoutDashboard className="w-4 h-4 mb-0.5" />
+            Admin
+          </button>
+        )}
       </div>
     </header>
   );

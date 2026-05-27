@@ -26,6 +26,7 @@ interface AdminPanelProps {
   coupons: Coupon[];
   onAddCoupon: (newCoupon: Coupon) => void;
   onDeleteCoupon: (id: string) => void;
+  onLogout?: () => void;
 }
 
 export default function AdminPanel({
@@ -40,7 +41,8 @@ export default function AdminPanel({
   onUpdateSettings,
   coupons = [],
   onAddCoupon,
-  onDeleteCoupon
+  onDeleteCoupon,
+  onLogout
 }: AdminPanelProps) {
   const [activeAdminSubTab, setActiveAdminSubTab] = useState<'stats' | 'products' | 'orders' | 'coupons' | 'configs' | 'ai-generator'>('stats');
 
@@ -344,7 +346,20 @@ export default function AdminPanel({
           <p className="text-slate-700 text-xs mt-1.5 font-semibold">Gerencie produtos sensoriais, kits, estoque das impressoras e faturamento de vendas.</p>
         </div>
 
-
+        {/* Botão de Sair */}
+        {onLogout && (
+          <button
+            id="admin-logout-btn"
+            onClick={() => {
+              if (window.confirm('Tem certeza que deseja sair do painel administrativo?')) {
+                onLogout();
+              }
+            }}
+            className="flex items-center gap-1.5 px-4 py-2 border-2 border-black rounded-xl text-xs font-black uppercase tracking-wider bg-red-50 text-red-600 hover:bg-red-100 shadow-[2px_2px_0px_#000] transition-all cursor-pointer shrink-0"
+          >
+            🔒 Sair
+          </button>
+        )}
         {/* Sub Navigation */}
         <div className="flex bg-white shadow-[3px_3px_0px_#000] border-2 border-black p-2 rounded-2xl shrink-0 flex-wrap gap-2 items-center relative overflow-hidden">
           <button
