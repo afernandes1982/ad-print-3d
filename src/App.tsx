@@ -489,8 +489,12 @@ export default function App() {
     const secColor = chosenSecondaryColor || (isPersonalizado ? selectedSecondaryColor.name : undefined);
     const textVal = chosenText || (isPersonalizado ? customText : undefined);
 
-    let customName = `${product.name} (${color} | Tam: ${size})`;
-    let cartItemId = `${product.id}-${color}-${size}`;
+    let customName = product.isKit 
+      ? `${product.name} (${product.size})`
+      : `${product.name} (${color} | Tam: ${size})`;
+    let cartItemId = product.isKit 
+      ? `${product.id}-kit`
+      : `${product.id}-${color}-${size}`;
 
     if (isPersonalizado) {
       const displaySecColor = secColor || 'Preto Carbono';
@@ -672,7 +676,9 @@ export default function App() {
     }
   };
   const isSilkColor = selectedColor.category === 'Silk';
-  const calculatedCustomPrice = (activeProductVal.price * getSizeFactor(selectedSize)) + (isSilkColor ? 10.00 : 0);
+  const calculatedCustomPrice = activeProductVal.isKit 
+    ? activeProductVal.price 
+    : (activeProductVal.price * getSizeFactor(selectedSize)) + (isSilkColor ? 10.00 : 0);
 
   // Filter swatches based on filament category filter tab
   const filteredColors = filamentTab === 'Ver Todos'
@@ -975,7 +981,7 @@ export default function App() {
                               className="select-none w-full h-full transition-all duration-300 flex items-center justify-center relative"
                               style={{ 
                                 filter: `drop-shadow(0 0 15px ${selectedColor.hex}40)`,
-                                transform: `scale(${getSizeFactor(selectedSize)})`
+                                transform: `scale(${activeProductVal.isKit ? 1.0 : getSizeFactor(selectedSize)})`
                               }}
                             >
                               {activeProductVal.imageUrl && (activeProductVal.imageUrl.startsWith('http') || activeProductVal.imageUrl.startsWith('/') || activeProductVal.imageUrl.startsWith('data:')) ? (
@@ -1159,31 +1165,33 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Scale / Size selector */}
-                      <div className="space-y-2">
-                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wide">Escala / Tamanho do Modelo:</label>
-                        <div className="grid grid-cols-3 gap-1.5">
-                          {(['P', 'M', 'G'] as const).map((size) => {
-                            const sizeLabels = { P: '50%', M: '100%', G: '150%' };
-                            const isActive = selectedSize === size;
-                            return (
-                              <button
-                                key={size}
-                                onClick={() => setSelectedSize(size)}
-                                className={`py-1.5 rounded-xl border-2 border-black text-xs font-black transition-all cursor-pointer shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#000] flex flex-col items-center justify-center ${
-                                  isActive ? 'bg-[#f87171] text-white shadow-[1px_1px_0px_#000]' : 'bg-white hover:bg-slate-50'
-                                  }`}
-                              >
-                                <span>{size}</span>
-                                <span className="text-[7.5px] opacity-75 font-normal">{sizeLabels[size]}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <p className="text-[8.5px] font-bold text-slate-500 uppercase text-center mt-1">
-                          {selectedSize === 'P' ? 'Pequeno (Ideal para chaveiros)' : selectedSize === 'M' ? 'MÉDIO (SENSORIAL PADRÃO) (1X)' : 'Grande (Feedback físico ampliado)'}
-                        </p>
-                      </div>
+                       {/* Scale / Size selector */}
+                       {!activeProductVal.isKit && (
+                         <div className="space-y-2">
+                           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wide">Escala / Tamanho do Modelo:</label>
+                           <div className="grid grid-cols-3 gap-1.5">
+                             {(['P', 'M', 'G'] as const).map((size) => {
+                               const sizeLabels = { P: '50%', M: '100%', G: '150%' };
+                               const isActive = selectedSize === size;
+                               return (
+                                 <button
+                                   key={size}
+                                   onClick={() => setSelectedSize(size)}
+                                   className={`py-1.5 rounded-xl border-2 border-black text-xs font-black transition-all cursor-pointer shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_#000] flex flex-col items-center justify-center ${
+                                     isActive ? 'bg-[#f87171] text-white shadow-[1px_1px_0px_#000]' : 'bg-white hover:bg-slate-50'
+                                     }`}
+                                 >
+                                   <span>{size}</span>
+                                   <span className="text-[7.5px] opacity-75 font-normal">{sizeLabels[size]}</span>
+                                 </button>
+                               );
+                             })}
+                           </div>
+                           <p className="text-[8.5px] font-bold text-slate-500 uppercase text-center mt-1">
+                             {selectedSize === 'P' ? 'Pequeno (Ideal para chaveiros)' : selectedSize === 'M' ? 'MÉDIO (SENSORIAL PADRÃO) (1X)' : 'Grande (Feedback físico ampliado)'}
+                           </p>
+                         </div>
+                       )}
 
                       {/* Add to Cart checkout Button */}
                       <button
