@@ -844,25 +844,25 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="bg-[#1c1c1c] border-3 border-black rounded-3xl p-5 shadow-[4px_4px_0px_#000] text-white">
+                    <div className="bg-white border-3 border-black rounded-3xl p-5 shadow-[4px_4px_0px_#000] text-black">
                       
                       {/* Printer Head Status bar */}
-                      <div className="flex justify-between items-start text-[9px] font-mono mb-4 border-b border-white/10 pb-2">
+                      <div className="flex justify-between items-start text-[9px] font-mono mb-4 border-b border-black/10 pb-2">
                         <div className="text-left">
-                          <span className="block text-[8px] text-slate-400 uppercase font-black">ESTÚDIO DE CRIAÇÃO</span>
-                          <span className="text-slate-300 block font-bold mt-0.5">AD PRINT 3D LAB</span>
+                          <span className="block text-[8px] text-slate-500 uppercase font-black">ESTÚDIO DE CRIAÇÃO</span>
+                          <span className="text-slate-800 block font-bold mt-0.5">AD PRINT 3D LAB</span>
                         </div>
                         <div className="text-right">
-                          <span className="block text-[8px] text-[#4ade80] font-black tracking-wider">PRONTO PARA IMPRESSÃO</span>
-                          <span className="text-[#4ade80] font-bold mt-0.5 block">Configuração Personalizada</span>
+                          <span className="block text-[8px] text-emerald-600 font-black tracking-wider">PRONTO PARA IMPRESSÃO</span>
+                          <span className="text-emerald-700 font-bold mt-0.5 block">Configuração Personalizada</span>
                         </div>
                       </div>
 
                       {/* Interactive window center frame */}
-                      <div className="bg-[#111111] border-2 border-black rounded-2xl h-56 relative flex items-center justify-center p-3 overflow-hidden bg-[radial-gradient(#2d2d2d_1.5px,transparent_1.5px)] [background-size:16px_16px]">
+                      <div className="bg-slate-50 border-2 border-black rounded-2xl h-56 relative flex items-center justify-center p-3 overflow-hidden bg-[radial-gradient(#cbd5e1_1.5px,transparent_1.5px)] [background-size:16px_16px]">
                         
                         {/* Glowing square background container */}
-                        <div className="absolute inset-4 border-2 border-dashed border-white/20 bg-white/[0.03] rounded-2xl pointer-events-none flex items-center justify-center" />
+                        <div className="absolute inset-4 border-2 border-dashed border-black/10 bg-black/[0.01] rounded-2xl pointer-events-none flex items-center justify-center" />
 
                         {/* Visualizer selector */}
                         {activeProductVal.imageUrl === 'pulse-pad' ? (
@@ -934,7 +934,7 @@ export default function App() {
                                 </span>
                               )}
                             </div>
-                            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 rounded-full bg-slate-950/85 border border-slate-800 px-3 py-1 text-[8px] font-mono font-bold text-teal-400 uppercase tracking-widest shadow-md z-10 pointer-events-none whitespace-nowrap">
+                            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 rounded-full bg-slate-900 border border-black px-3 py-1 text-[8px] font-mono font-bold text-teal-300 uppercase tracking-widest shadow-md z-10 pointer-events-none whitespace-nowrap">
                               Estúdio 3D: {selectedColor.name}
                               {['letreiro-personalizado', 'porta-lapis-personalizado'].includes(activeProductVal.id) && ` / ${selectedSecondaryColor.name}`}
                               {` (${selectedSize})`}
@@ -944,7 +944,7 @@ export default function App() {
                       </div>
 
                       {/* Material info row */}
-                      <div className="mt-3 flex justify-between text-[9px] font-mono text-slate-400 font-bold">
+                      <div className="mt-3 flex justify-between text-[9px] font-mono text-slate-650 font-bold">
                         <span>Material: Plástico PLA Ecológico</span>
                         <span>100% Seguro &amp; Atóxico</span>
                       </div>
