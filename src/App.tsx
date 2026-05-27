@@ -676,9 +676,18 @@ export default function App() {
     }
   };
   const isSilkColor = selectedColor.category === 'Silk';
+  const getSilkPriceAdder = (size: 'P' | 'M' | 'G') => {
+    if (!isSilkColor) return 0;
+    switch (size) {
+      case 'P': return 5.00;
+      case 'M': return 10.00;
+      case 'G': return 15.00;
+      default: return 10.00;
+    }
+  };
   const calculatedCustomPrice = activeProductVal.isKit 
     ? activeProductVal.price 
-    : (activeProductVal.price * getSizeFactor(selectedSize)) + (isSilkColor ? 10.00 : 0);
+    : (activeProductVal.price * getSizeFactor(selectedSize)) + getSilkPriceAdder(selectedSize);
 
   // Filter swatches based on filament category filter tab
   const filteredColors = filamentTab === 'Ver Todos'
