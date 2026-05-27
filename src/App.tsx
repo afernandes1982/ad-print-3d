@@ -165,6 +165,8 @@ export default function App() {
     const savedCoupons = localStorage.getItem('ad_print_3d_coupons');
     let loadedProducts: Product[] = [];
     const deletedIds: string[] = JSON.parse(localStorage.getItem('ad_print_3d_deleted_product_ids') || '[]');
+
+    // 1. Instantly fallback to localStorage / defaults to avoid loading delays
     if (savedProducts) {
       let parsed = JSON.parse(savedProducts);
       let changed = false;
@@ -238,9 +240,6 @@ export default function App() {
         if (existingIdx === -1) {
           parsed.push(defaultProd);
           changed = true;
-        } else if (parsed[existingIdx].imageUrl !== defaultProd.imageUrl && defaultProd.imageUrl.startsWith('https://')) {
-          parsed[existingIdx].imageUrl = defaultProd.imageUrl;
-          changed = true;
         }
       });
 
@@ -265,6 +264,48 @@ export default function App() {
         if (matchingColor) setSelectedColor(matchingColor);
       }
     }
+
+    // 2. Load and synchronize from PostgreSQL database
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(serverProducts => {
+        if (Array.isArray(serverProducts) && serverProducts.length > 0) {
+          let updatedList = [...serverProducts];
+          let changed = false;
+
+          // Check for any newly added default products in code (e.g. the 5-toy kit) that are missing on server
+          INITIAL_PRODUCTS.forEach((defaultProd) => {
+            if (deletedIds.includes(defaultProd.id)) return;
+            const exists = updatedList.some(p => p.id === defaultProd.id);
+            if (!exists) {
+              updatedList.push(defaultProd);
+              changed = true;
+
+              // Save to backend database
+              fetch('/api/admin/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(defaultProd)
+              }).catch(err => console.error('Erro ao salvar novo produto padrão no servidor:', err));
+            }
+          });
+
+          if (changed) {
+            localStorage.setItem('ad_print_3d_products', JSON.stringify(updatedList));
+          }
+          setProducts(updatedList);
+          
+          if (updatedList.length > 0) {
+            setActiveProduct(prev => {
+              if (prev && updatedList.some(p => p.id === prev.id)) {
+                return updatedList.find(p => p.id === prev.id) || prev;
+              }
+              return updatedList.find(p => p.id === 'estrela-espiral-movel') || updatedList[0];
+            });
+          }
+        }
+      })
+      .catch(err => console.warn('Could not load products from server database. Using local.', err));
 
     if (savedOrders) {
       setOrders(JSON.parse(savedOrders));
@@ -480,21 +521,42 @@ export default function App() {
   // Admin DB operations handlers
   const handleAdminAddProduct = (newProd: Product) => {
     updateProductsInDb([newProd, ...products]);
+    fetch('/api/admin/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProd)
+    }).catch(err => console.error('Erro ao adicionar produto no servidor:', err));
   };
 
   const handleAdminUpdateProduct = (updatedProd: Product) => {
     const updated = products.map(p => p.id === updatedProd.id ? updatedProd : p);
     updateProductsInDb(updated);
+    fetch(`/api/admin/products/${updatedProd.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedProd)
+    }).catch(err => console.error('Erro ao atualizar produto no servidor:', err));
   };
 
   const handleAdminUpdateStock = (id: string, newStock: number) => {
-    const updated = products.map(p => p.id === id ? { ...p, stock: newStock } : p);
+    const targetProduct = products.find(p => p.id === id);
+    if (!targetProduct) return;
+    const updatedProd = { ...targetProduct, stock: newStock };
+    const updated = products.map(p => p.id === id ? updatedProd : p);
     updateProductsInDb(updated);
+    fetch(`/api/admin/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedProd)
+    }).catch(err => console.error('Erro ao atualizar estoque no servidor:', err));
   };
 
   const handleAdminDeleteProduct = (id: string) => {
     const updated = products.filter(p => p.id !== id);
     updateProductsInDb(updated);
+    fetch(`/api/admin/products/${id}`, {
+      method: 'DELETE'
+    }).catch(err => console.error('Erro ao excluir produto no servidor:', err));
 
     // Track deleted product ID in localStorage so it doesn't get restored on page reload
     try {
@@ -894,7 +956,7 @@ export default function App() {
                                     onClick={() => setIsSimulatorImageZoomed(true)}
                                     className="w-full h-full object-contain"
                                   />
-                                  {!['letreiro-personalizado', 'porta-lapis-personalizado'].includes(activeProductVal.id) && (
+                                  {!['letreiro-personalizado', 'porta-lapis-personalizado'].includes(activeProductVal.id) && !activeProductVal.isKit && (
                                     <div 
                                       onClick={() => setIsSimulatorImageZoomed(true)}
                                       className="absolute inset-0 w-full h-full pointer-events-none"
@@ -1514,7 +1576,7 @@ export default function App() {
                   alt={activeProductVal.name} 
                   className="max-w-full max-h-[55vh] object-contain" 
                 />
-                {!['letreiro-personalizado', 'porta-lapis-personalizado'].includes(activeProductVal.id) && (
+                {!['letreiro-personalizado', 'porta-lapis-personalizado'].includes(activeProductVal.id) && !activeProductVal.isKit && (
                   <div 
                     className="absolute inset-3 pointer-events-none"
                     style={{
